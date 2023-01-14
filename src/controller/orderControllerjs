@@ -1,0 +1,89 @@
+const orderModel = require("../model/orderModel")
+
+const fetchAll = async (req, res) => {
+  const result = await orderModel.find({});
+
+  res.send(result);
+}
+
+const findById = async (req, res) => {
+  const orderId = req.params.orderId;
+  let order;
+
+  try {
+    order = await orderModel.findById(orderId);
+  } catch (err) {
+    throw new Error(err)
+  }
+
+  if (!order) {
+    return res.status(500).json({ error: 'Order not found' })
+  }
+
+  return res.send(order);
+}
+
+const create = async (req, res) => {
+  try {
+    const newOrder = new orderModel(req.body);
+
+    await newOrder.save()
+      .then(() => {
+        return res.status(201).json(newOrder)
+      })
+      .catch((err) => {
+        return res.status(400).json({
+          success: false,
+          message: "An error occured when save order: " + err
+        })
+      })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server err"
+    })
+  }
+}
+
+const update = async (req, res) => {
+  try {
+    const orderId = req.body["_id"];
+    const order = await orderModel.findById(orderId);
+    
+    await order.updateOne(req.body)
+      .then(() => {
+        return res.status(200).json(req.body)
+      })
+      .catch((err) => {
+        return res.status(400).json({
+          success: false,
+          message: "An error occured when update order: " + err
+        })
+      })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server err"
+    })
+  }
+}
+
+const deleteOne = async (req, res) => {
+  const orderId = req.params.orderId;
+
+  try {
+    await orderModel.deleteOne({ "_id": orderId });
+  } catch (err) {
+    throw new Error(err)
+  }
+
+  return res.send({ success: true });
+}
+
+module.exports = {
+  findById,
+  fetchAll,
+  create,
+  update,
+  deleteOne,
+}
